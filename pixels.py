@@ -28,7 +28,7 @@ class PixelImage:
         self.fitImage = [None] * 4
         
         self.borders = [None] * 4
-        self.position = [None, None]
+        self.position = (None, None)
 
         self.borders[BorderSide.LEFT] = [self.pixels[0,i][:-1] for i in range(self.width)]
         self.borders[BorderSide.RIGHT] = [self.pixels[-1,i][:-1] for i in range(self.width)]
@@ -91,52 +91,143 @@ class PixelImage:
 
 #     print(f'Lado de imagen {i}')
 
-for side in BorderSide:
-    list = [] 
-    upperCorner = None
-    bottomCorner = None
-    for i in range(1200):
-        i = i + 1
-        pixelImage = PixelImage(f'./imag/({i}).png')
+# def Main():
+#     def getUpperLeftBorder(imageList) -> PixelImage:
+#         borderImage = None
+#         for i in range(1200):
+#             i = i + 1
+#             pixelImage = PixelImage(f'./imag/({i}).png')
 
-        isBlack = pixelImage.IsBorderBlack(side)
-        if(isBlack):
-            print(f"Is black {i} side {side}")
-            if(pixelImage.IsBorderBlack(BorderSide.UPPER)):
-                print(f"{i} is Upper-{side} corner")
-                upperCorner = pixelImage
-            # if(pixelImage.IsBorderBlack(BorderSide.BOTTOM)):
-            #     print(f"{i} is Upper-{side} corner")
-                bottomCorner = pixelImage
-            list.append(pixelImage)
+#             if(pixelImage.IsBorderBlack(BorderSide.UPPER) and pixelImage.IsBorderBlack(BorderSide.LEFT)):
+#                 borderimage = pixelImage
+            
+#             imageList.append(pixelImage)
+#         return imageList, borderimage
 
-        # print(f'Lado de imagen negro {i} side {side}')
-    print(list, side)
+#     # Initialize variables.
+#     imageList = []
+#     assignedList = []
+#     imageList, borderImage = getUpperLeftBorder(imageList)
 
-    # Intentar acomodar la orilla
-    list.remove(upperCorner)
+#     selectedImage = borderImage
+#     imageList.remove(selectedImage)
 
-    selected = upperCorner
-    sideFit = BorderSide.BOTTOM
-    newImage = Image.new('RGB', (selected.width, selected.height * 30))
-    offset = 0
-    while len(list) > 0:
-        for image in list:
-            selected.BorderFit(image, sideFit)
-            pass
+#     assignedList.append(selectedImage)
 
-        # Paste images
-        newImage.paste(selected.image, (0, offset * 40))
-        offset += 1
+#     side = BorderSide.BOTTOM
+#     sideFit = BorderSide.UPPER
 
-        selected = selected.fitImage[sideFit]
-        list.remove(selected)
+#     # Principal loop.
+#     for i in range(40):
+#         for j in range(30):
+#             for image in imageList:
+#                 selectedImage.BorderFit(image, side)
+#                 pass
+#             selectedImage.position = (i,j)
+                    
+#             selectedImage = selectedImage.fitImage[side]
+
+#             if(len(imageList) == 0 ): break
+
+#             imageList.remove(selectedImage)
+#             assignedList.append(selectedImage)
+
+#             side = BorderSide.BOTTOM
+#             sideFit = BorderSide.UPPER
+
+#         print(f"Assigned images: {len(assignedList)}")
+#         side = BorderSide.RIGHT
+#         sideFit = BorderSide.LEFT
+# newImage = Image.new('RGB', (40 * 40, 40 * 30))
+
+# for image in assignedList:
+#     newImage.paste(image.image, (image.position[0] * 40, image.position[1] * 40 ))
+
+# newImage.save("ferberNude.jpg")
+
+
+
+# for side in BorderSide:
+#     list = [] 
+#     upperCorner = None
+#     bottomCorner = None
+#     for i in range(1200):
+#         i = i + 1
+#         pixelImage = PixelImage(f'./imag/({i}).png')
+
+#         isBlack = pixelImage.IsBorderBlack(side)
+#         if(isBlack):
+#             print(f"Is black {i} side {side}")
+#             if(pixelImage.IsBorderBlack(BorderSide.UPPER)):
+#                 print(f"{i} is Upper-{side} corner")
+#                 upperCorner = pixelImage
+#             # if(pixelImage.IsBorderBlack(BorderSide.BOTTOM)):
+#             #     print(f"{i} is Upper-{side} corner")
+#                 bottomCorner = pixelImage
+#             list.append(pixelImage)
+
+#         # print(f'Lado de imagen negro {i} side {side}')
+#     print(list, side)
+
+#     # Intentar acomodar la orilla
+#     list.remove(upperCorner)
+
+#     selected = upperCorner
+#     sideFit = BorderSide.BOTTOM
+#     newImage = Image.new('RGB', (selected.width, selected.height * 30))
+#     offset = 0
+#     while len(list) > 0:
+#         for image in list:
+#             selected.BorderFit(image, sideFit)
+#             pass
+
+#         # Paste images
+#         newImage.paste(selected.image, (0, offset * 40))
+#         offset += 1
+
+#         selected = selected.fitImage[sideFit]
+#         list.remove(selected)
     
-    newImage.paste(selected.image, (0, offset * 40))
-    newImage.save(f"test{side}.jpg")        
+#     newImage.paste(selected.image, (0, offset * 40))
+#     newImage.save(f"test{side}.jpg")
 
-print("No match")
 
-img = PixelImage("./white.png")
 
-img.IsBorderBlack(BorderSide.RIGHT)
+# Upper border
+side = BorderSide.UPPER
+list = [] 
+upperCorner = None
+bottomCorner = None
+for i in range(1200):
+    i = i + 1
+    pixelImage = PixelImage(f'./imag/({i}).png')
+    isBlack = pixelImage.IsBorderBlack(side)
+    if(isBlack):
+        print(f"Is black {i} side {side}")
+        if(pixelImage.IsBorderBlack(BorderSide.UPPER)):
+            print(f"{i} is Upper-{side} corner")
+            upperCorner = pixelImage
+        # if(pixelImage.IsBorderBlack(BorderSide.BOTTOM)):
+        #     print(f"{i} is Upper-{side} corner")
+            bottomCorner = pixelImage
+        list.append(pixelImage)
+    # print(f'Lado de imagen negro {i} side {side}')
+print(list, side)
+# Intentar acomodar la orilla
+list.remove(upperCorner)
+selected = upperCorner
+sideFit = BorderSide.RIGHT
+newImage = Image.new('RGB', (selected.width * 40, selected.height))
+offset = 0
+while len(list) > 0:
+    for image in list:
+        selected.BorderFit(image, sideFit)
+        pass
+    # Paste images
+    newImage.paste(selected.image, (offset * 40, 0))
+    offset += 1
+    selected = selected.fitImage[sideFit]
+    list.remove(selected)
+
+newImage.paste(selected.image, (offset * 40, offset * 0))
+newImage.save(f"test{side}.jpg")
