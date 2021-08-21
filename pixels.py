@@ -2,6 +2,7 @@ from typing import ClassVar, List, Tuple
 from PIL import Image
 from enum import IntEnum
 import math
+from datetime import datetime
 
 # im = Image.open('./imag/(2).png', 'r')
 # width, height = im.size
@@ -72,9 +73,41 @@ class PixelImage:
             self.fit[borderSide] = sum
             self.fitImage[borderSide] = image2
 
+    def BorderFit(self, image2, borderSide, image3, borderSide3, mustBeBorder, mustBeBorderSide):
+
+        borderSide2 = getOppositeSide(borderSide)
+        borderSide3 = getOppositeSide(borderSide3)
+
+        border1 = self.borders[borderSide]
+        border2 = image2.borders[borderSide2]
+        border3 = image3.borders[borderSide3]
+
+        if(mustBeBorder):
+            isBlack = image2.IsBorderBlack(mustBeBorderSide)
+            if not isBlack: return
+
+        sum = 0
+        for i in range(len(border1)):
+            for j in range(len(border1[0])):
+                sum += abs(border1[i][j] - border2[i][j])                
+
+        if image3 is None:
+            for i in range(len(border1)):
+                for j in range(len(border1[0])):
+                    sum += abs(border1[i][j] - border3[i][j])
+
+        if(sum < self.fit[borderSide]):
+            self.fit[borderSide] = sum
+            self.fitImage[borderSide] = image2
+
     def __str__(self) -> str:
         return self.path
 
+def getOppositeSide(borderSide):
+    if(borderSide is BorderSide.BOTTOM): return BorderSide.UPPER
+    if(borderSide is BorderSide.LEFT): return BorderSide.RIGHT
+    if(borderSide is BorderSide.RIGHT): return BorderSide.LEFT
+    if(borderSide is BorderSide.UPPER): return BorderSide.BOTTOM
 
 # pixelImage = PixelImage('./imag/(1).png')
 # pixelImage2 = PixelImage('./imag/(2).png')
@@ -91,61 +124,115 @@ class PixelImage:
 
 #     print(f'Lado de imagen {i}')
 
-# def Main():
-#     def getUpperLeftBorder(imageList) -> PixelImage:
-#         borderImage = None
-#         for i in range(1200):
-#             i = i + 1
-#             pixelImage = PixelImage(f'./imag/({i}).png')
+def Main():
+    def getUpperLeftBorder() -> PixelImage:
+        imageList = []
+        borderImage = None
+        for i in range(1200):
+            i = i + 1
+            pixelImage = PixelImage(f'./imag/({i}).png')
 
-#             if(pixelImage.IsBorderBlack(BorderSide.UPPER) and pixelImage.IsBorderBlack(BorderSide.LEFT)):
-#                 borderimage = pixelImage
+            if(pixelImage.IsBorderBlack(BorderSide.UPPER) and pixelImage.IsBorderBlack(BorderSide.LEFT)):
+                borderimage = pixelImage
             
-#             imageList.append(pixelImage)
-#         return imageList, borderimage
+            imageList.append(pixelImage)
+        return imageList, borderimage
 
-#     # Initialize variables.
-#     imageList = []
-#     assignedList = []
-#     imageList, borderImage = getUpperLeftBorder(imageList)
+    # Initialize variables.
+    imageList = []
+    assignedList = []
+    imageList, borderImage = getUpperLeftBorder()
 
-#     selectedImage = borderImage
-#     imageList.remove(selectedImage)
+    selectedImage = borderImage
+    # selectedImage.position = (0,0)
+    # imageList.remove(selectedImage)
+    # assignedList.append(selectedImage)
 
-#     assignedList.append(selectedImage)
+    # assignedList.append(selectedImage)
 
-#     side = BorderSide.BOTTOM
-#     sideFit = BorderSide.UPPER
+    side = BorderSide.BOTTOM
+    sideFit = BorderSide.UPPER
 
-#     # Principal loop.
-#     for i in range(40):
-#         for j in range(30):
-#             for image in imageList:
-#                 selectedImage.BorderFit(image, side)
-#                 pass
-#             selectedImage.position = (i,j)
-                    
-#             selectedImage = selectedImage.fitImage[side]
+    # Initialize
+    imageMatrix = [[None] * 30] * 40
+    imageList, borderImage = getUpperLeftBorder()
 
-#             if(len(imageList) == 0 ): break
+    borderImage.position = (0,0)
+    imageList.remove(borderImage)
+    imageMatrix[0][0] = borderImage
+    side = BorderSide.BOTTOM
+    selected = borderImage
+    mustBeBorder = False
+    assignedList.append(selected)
 
-#             imageList.remove(selectedImage)
-#             assignedList.append(selectedImage)
+    # Principal loop.
+    for i in range(40):
+        for j in range(30):
+            if i == 0 and j == 0: continue
 
-#             side = BorderSide.BOTTOM
-#             sideFit = BorderSide.UPPER
+            if i == 0:
+                mustBeBorder = True
+                borderSide = BorderSide.LEFT
+            elif j == 0:
+                mustBeBorder = True
+                borderSide = BorderSide.UPPER 
+                side = BorderSide.RIGHT
+                selected = imageMatrix[i - 1][j]
+            elif j == 29:
+                mustBeBorder = True
+                borderSide = BorderSide.BOTTOM
 
-#         print(f"Assigned images: {len(assignedList)}")
-#         side = BorderSide.RIGHT
-#         sideFit = BorderSide.LEFT
-# newImage = Image.new('RGB', (40 * 40, 40 * 30))
+            elif i == 39:
+                mustBeBorder = True
+                borderSide = BorderSide.RIGHT
+            else:
+                side = BorderSide.BOTTOM
+                mustBeBorder = False
+                
+            for image in imageList:
+                selected.BorderFit(image, side, mustBeBorder, borderSide)                
+                pass            
+            image = selected.fitImage[side]            
+            imageMatrix[i][j] = image
+            imageList.remove(image)
+            image.position = (i,j)
+            assignedList.append(image)
+            selected = image
+            
+            
+    printImage(assignedList)
+    # newImage = Image.new('RGB', (40 * 40, 40 * 30))
 
-# for image in assignedList:
-#     newImage.paste(image.image, (image.position[0] * 40, image.position[1] * 40 ))
+    # for image in assignedList:
+    #     newImage.paste(image.image, (image.position[0] * 40, image.position[1] * 40 ))
 
-# newImage.save("ferberNude.jpg")
+    # newImage.save(f"ferberNude-{datetime.timestamp(datetime.now())}.jpg")
 
+def printImage(imgList):
+    newImage = Image.new('RGB', (40 * 40, 40 * 30))
 
+    for image in imgList:
+        newImage.paste(image.image, (image.position[0] * 40, image.position[1] * 40 ))
+
+    newImage.save(f"ferberNude-{datetime.timestamp(datetime.now())}.jpg")
+
+def printMatrix(matrix):
+    newImage = Image.new('RGB', (40 * 40, 40 * 30))
+
+    for list in matrix:
+        for image in list:
+            if(image is None) : continue
+            newImage.paste(image.image, (image.position[0] * 40, image.position[1] * 40 ))
+
+    newImage.save(f"ferberNude-{datetime.timestamp(datetime.now())}.jpg")
+
+def findInList(list, property):
+    for obj in list:
+        if(obj.position == property): 
+            return obj
+    
+
+Main()
 
 # for side in BorderSide:
 #     list = [] 
