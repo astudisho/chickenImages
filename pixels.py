@@ -73,14 +73,13 @@ class PixelImage:
             self.fit[borderSide] = sum
             self.fitImage[borderSide] = image2
 
-    def BorderFit(self, image2, borderSide, image3, borderSide3, mustBeBorder, mustBeBorderSide):
+    def BorderFit(self, image2, borderSide, mustBeBorder, mustBeBorderSide,image3, borderSide3):
 
         borderSide2 = getOppositeSide(borderSide)
-        borderSide3 = getOppositeSide(borderSide3)
+        
 
         border1 = self.borders[borderSide]
         border2 = image2.borders[borderSide2]
-        border3 = image3.borders[borderSide3]
 
         if(mustBeBorder):
             isBlack = image2.IsBorderBlack(mustBeBorderSide)
@@ -91,7 +90,10 @@ class PixelImage:
             for j in range(len(border1[0])):
                 sum += abs(border1[i][j] - border2[i][j])                
 
-        if image3 is None:
+        if image3 is not None:
+            borderSide3 = getOppositeSide(borderSide3)
+            border3 = image3.borders[borderSide3]
+
             for i in range(len(border1)):
                 for j in range(len(border1[0])):
                     sum += abs(border1[i][j] - border3[i][j])
@@ -164,6 +166,8 @@ def Main():
     selected = borderImage
     mustBeBorder = False
     assignedList.append(selected)
+    selected2 = None
+    borderSide2 = BorderSide.LEFT
 
     # Principal loop.
     for i in range(40):
@@ -173,31 +177,39 @@ def Main():
             if i == 0:
                 mustBeBorder = True
                 borderSide = BorderSide.LEFT
+                selected2 = None
             elif j == 0:
                 mustBeBorder = True
                 borderSide = BorderSide.UPPER 
                 side = BorderSide.RIGHT
                 selected = imageMatrix[i - 1][j]
+                selected2 = imageMatrix[i-1][j]
+                borderSide2 = BorderSide.LEFT
             elif j == 29:
                 mustBeBorder = True
                 borderSide = BorderSide.BOTTOM
-
+                selected2 = imageMatrix[i-1][j]
+                borderSide2 = BorderSide.LEFT
             elif i == 39:
                 mustBeBorder = True
                 borderSide = BorderSide.RIGHT
+                selected2 = imageMatrix[i-1][j]
+                borderSide2 = BorderSide.LEFT
             else:
                 side = BorderSide.BOTTOM
                 mustBeBorder = False
+                selected2 = imageMatrix[i-1][j]
+                borderSide2 = BorderSide.LEFT
                 
             for image in imageList:
-                selected.BorderFit(image, side, mustBeBorder, borderSide)                
+                selected.BorderFit(image, side, mustBeBorder, borderSide, selected2, borderSide2)
                 pass            
             image = selected.fitImage[side]            
             imageMatrix[i][j] = image
             imageList.remove(image)
             image.position = (i,j)
             assignedList.append(image)
-            selected = image
+            selected = image            
             
             
     printImage(assignedList)
