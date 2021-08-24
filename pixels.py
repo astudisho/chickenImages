@@ -36,19 +36,9 @@ class PixelImage:
         self.borders[BorderSide.UPPER] = [self.pixels[i,0][:-1] for i in range(self.width)]
         self.borders[BorderSide.BOTTOM] = [self.pixels[i,-1][:-1] for i in range(self.width)]
 
-    # def GetBorder(self, border):
-    #     if(border is BorderSide.LEFT):
-    #         return [self.pixels[0,i][:-1] for i in range(self.width)]            
-
-    #     if(border is BorderSide.RIGHT):
-    #         return [self.pixels[-1,i][:-1] for i in range(self.width)]
-        
-    #     if(border is BorderSide.UPPER):
-    #         return [self.pixels[i,0][:-1] for i in range(self.width)]
-
-    #     if(border is BorderSide.BOTTOM):
-    #         return [self.pixels[i,-1][:-1] for i in range(self.width)]
-
+        self.scores1 = []
+        self.scores2 = []
+ 
     def IsBorderBlack(self,borderSide):
         border = self.borders[borderSide]
         result = border == [(0,0,0)] * self.width
@@ -101,6 +91,41 @@ class PixelImage:
         if(sum < self.fit[borderSide]):
             self.fit[borderSide] = sum
             self.fitImage[borderSide] = image2
+
+    def BorderFit2(self, image2, borderSide, mustBeBorder, mustBeBorderSide,image3, borderSide3):
+
+        borderSide2 = getOppositeSide(borderSide)
+        
+
+        border1 = self.borders[borderSide]
+        border2 = image2.borders[borderSide2]
+
+        if(mustBeBorder):
+            isBlack = image2.IsBorderBlack(mustBeBorderSide)
+            if not isBlack: return
+
+        sum1 = 0
+        for i in range(len(border1)):
+            for j in range(len(border1[0])):
+                sum1 += abs(border1[i][j] - border2[i][j])
+
+        self.scores1.append((sum1, image2))
+
+        if image3 is not None:
+            sum2 = 0
+            borderSide3 = getOppositeSide(borderSide3)
+            border3 = image3.borders[borderSide3]
+
+            for i in range(len(border1)):
+                for j in range(len(border1[0])):
+                    sum2 += abs(border1[i][j] - border3[i][j])
+
+            self.scores2.append((sum2, image3))
+
+        # if(sum < self.fit[borderSide]):
+        #     self.fit[borderSide] = sum
+        #     self.fitImage[borderSide] = image2
+
 
     def __str__(self) -> str:
         return self.path
@@ -202,9 +227,12 @@ def Main():
                 borderSide2 = BorderSide.LEFT
                 
             for image in imageList:
-                selected.BorderFit(image, side, mustBeBorder, borderSide, selected2, borderSide2)
+                # selected.BorderFit(image, side, mustBeBorder, borderSide, selected2, borderSide2)
+                selected.BorderFit2(image, side, mustBeBorder, borderSide, selected2, borderSide2)                
                 pass            
-            image = selected.fitImage[side]            
+            # image = selected.fitImage[side]
+            image = selectFitImage(selected, imageList)
+
             imageMatrix[i][j] = image
             imageList.remove(image)
             image.position = (i,j)
@@ -219,6 +247,40 @@ def Main():
     #     newImage.paste(image.image, (image.position[0] * 40, image.position[1] * 40 ))
 
     # newImage.save(f"ferberNude-{datetime.timestamp(datetime.now())}.jpg")
+
+def selectFitImage(image, pendingList):
+    image.scores1.sort(key= lambda x: x[0])
+
+    if len(image.scores2) == 0: return image.scores1[0][1]
+
+    image.scores2.sort(key = lambda x: x[0])
+
+    lowIndex = math.inf
+    selected = None
+
+    for pendingImage in pendingList:
+        index1 = math.inf
+        for index, im in enumerate(image.scores1):
+            if im[1] == pendingImage: 
+                index1 = index
+                break
+        
+        index2 = math.inf
+        if len(image.scores2) > 0:
+            for index, im in enumerate(image.scores1):
+                if im[1] == pendingImage: 
+                    index2 = index
+                    break
+            pass
+        else: index2 = 0
+
+        avgIndex = (index1 + index2) / 2
+
+        if avgIndex < lowIndex:
+            selected = pendingImage
+
+    return selected    
+    
 
 def printImage(imgList):
     newImage = Image.new('RGB', (40 * 40, 40 * 30))
